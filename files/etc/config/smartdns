@@ -1,4 +1,3 @@
-
 config smartdns
 	option server_name 'smartdns'
 	option auto_set_dnsmasq '1'
@@ -17,7 +16,7 @@ config smartdns
 	option seconddns_force_aaaa_soa '1'
 	option enabled '0'
 	option port '1053'
-	option seconddns_server_group 'oceans'
+	option seconddns_server_group 'us'
 	option prefetch_domain '1'
 	option old_port '1053'
 	option old_enabled '0'
@@ -30,12 +29,14 @@ config client-rule
 
 config ip-rule
 
+# ===== 国外组 (us) =====
+
 config server
 	option enabled '0'
 	option name 'Yandex'
-	option ip '77.88.8.1'
-	option type 'tcp'
-	option server_group 'oceans'
+	option ip 'common.dns.yandex.net/dns-query'
+	option type 'https'
+	option server_group 'us'
 	option exclude_default_group '1'
 
 config server
@@ -43,7 +44,7 @@ config server
 	option name 'AdGuard'
 	option ip '94.140.14.140/dns-query'
 	option type 'https'
-	option server_group 'oceans'
+	option server_group 'us'
 	option exclude_default_group '1'
 
 config server
@@ -51,7 +52,7 @@ config server
 	option name 'Cloudflare'
 	option ip '1.1.1.1/dns-query'
 	option type 'https'
-	option server_group 'oceans'
+	option server_group 'us'
 	option exclude_default_group '1'
 
 config server
@@ -59,7 +60,7 @@ config server
 	option name 'Quad9'
 	option ip '9.9.9.10/dns-query'
 	option type 'https'
-	option server_group 'oceans'
+	option server_group 'us'
 	option exclude_default_group '1'
 
 config server
@@ -67,7 +68,7 @@ config server
 	option name 'Google'
 	option ip '8.8.4.4/dns-query'
 	option type 'https'
-	option server_group 'oceans'
+	option server_group 'us'
 	option exclude_default_group '1'
 
 config server
@@ -75,7 +76,7 @@ config server
 	option name 'BebasDNS'
 	option ip 'dns.bebasid.com/dns-query'
 	option type 'https'
-	option server_group 'oceans'
+	option server_group 'us'
 	option exclude_default_group '1'
 
 config server
@@ -83,7 +84,7 @@ config server
 	option name 'IIJ.JP'
 	option ip 'public.dns.iij.jp/dns-query'
 	option type 'https'
-	option server_group 'oceans'
+	option server_group 'us'
 	option exclude_default_group '1'
 
 config server
@@ -91,7 +92,7 @@ config server
 	option name '0ms DNS'
 	option ip '0ms.dev/dns-query'
 	option type 'https'
-	option server_group 'oceans'
+	option server_group 'us'
 	option exclude_default_group '1'
 
 config server
@@ -99,8 +100,42 @@ config server
 	option name 'OpenDNS'
 	option ip '208.67.222.222/dns-query'
 	option type 'https'
-	option server_group 'oceans'
+	option server_group 'us'
 	option exclude_default_group '1'
+
+config server
+	option enabled '1'
+	option name 'Mullvad'
+	option ip 'dns.mullvad.net/dns-query'
+	option type 'https'
+	option server_group 'us'
+	option exclude_default_group '1'
+
+config server
+	option enabled '1'
+	option name 'DNS.SB'
+	option ip 'dns.sb/dns-query'
+	option type 'https'
+	option server_group 'us'
+	option exclude_default_group '1'
+
+config server
+	option enabled '1'
+	option name 'CleanBrowsing'
+	option ip 'doh.cleanbrowsing.org/doh/security-filter/'
+	option type 'https'
+	option server_group 'us'
+	option exclude_default_group '1'
+
+config server
+	option enabled '1'
+	option name 'DNS4EU Unfiltered'
+	option ip 'unfiltered.joindns4.eu/dns-query'
+	option type 'https'
+	option server_group 'us'
+	option exclude_default_group '1'
+
+# ===== 默认组 (国内,未指定 server_group) =====
 
 config server
 	option enabled '1'
@@ -125,4 +160,3 @@ config server
 	option name 'ByteDance DNS'
 	option ip '180.184.1.1'
 	option type 'udp'
-	
