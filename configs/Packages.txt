@@ -168,8 +168,19 @@ CONFIG_PACKAGE_kmod-rtw88-8821cu=y
 CONFIG_PACKAGE_kmod-rtw88-8822bu=y
 CONFIG_PACKAGE_kmod-rtw88-8822cu=y
 
+
+
+# H68K 1G × 2：SoC GMAC + RTL8211F
 CONFIG_PACKAGE_kmod-phy-realtek=y
-CONFIG_PACKAGE_kmod-r8169=y
+
+# H68K 2.5G × 2：RTL8125
+
+
+# 不使用以下 Realtek 独立网卡驱动
+# CONFIG_PACKAGE_kmod-r8126 is not set
+# CONFIG_PACKAGE_kmod-r8168 is not set
+# CONFIG_PACKAGE_kmod-r8169 is not set
+# CONFIG_PACKAGE_r8169-firmware is not set
 
 
 # 2.5 Wi-Fi 框架
