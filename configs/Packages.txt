@@ -168,8 +168,7 @@ CONFIG_PACKAGE_kmod-rtw88-8821cu=y
 CONFIG_PACKAGE_kmod-rtw88-8822bu=y
 CONFIG_PACKAGE_kmod-rtw88-8822cu=y
 
-# 2.4 Broadcom
-CONFIG_PACKAGE_kmod-brcmfmac=y
+
 
 # 2.5 Wi-Fi 框架
 CONFIG_PACKAGE_kmod-cfg80211=y
