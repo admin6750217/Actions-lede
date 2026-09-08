@@ -183,9 +183,6 @@ CONFIG_DRIVER_11AX_SUPPORT=y
 # 2.6 AP / WPA / WPA3
 CONFIG_PACKAGE_hostapd-common=y
 CONFIG_PACKAGE_hostapd-openssl=y
-CONFIG_PACKAGE_wpa-supplicant-openssl=y
-CONFIG_PACKAGE_wpa-cli=y
-CONFIG_PACKAGE_wpad-openssl=y
 
 
 # 三、主题
