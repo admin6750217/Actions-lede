@@ -24,8 +24,8 @@ env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
   FREE_DISK_SH: scripts/free_disk_space.sh
   ENV_SH: scripts/environment.sh
-  REPO_URL: https://github.com/openwrt/openwrt
-  REPO_BRANCH: main
+  REPO_URL: https://github.com/DHDAXCW/lede-rockchip
+  REPO_BRANCH: stable
   PLATFORM_FILE: configs/Target-rockchip.txt
   CONFIG_FILE: configs/Packages.txt
   CONFIG_5G: configs/Packages-5G.txt
