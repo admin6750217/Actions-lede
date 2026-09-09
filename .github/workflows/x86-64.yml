@@ -8,7 +8,7 @@
 # Description: Build OpenWrt using GitHub Actions
 #
 
-name: x86-64
+name: rockchip-openwrt
 
 permissions: write-all
 #开启写权限，防止无法上传到release
@@ -17,8 +17,8 @@ on:
   repository_dispatch:
   workflow_dispatch:
   schedule:
-   - cron: 0 20 * * 4
-   #     分,时,日,月,周。每周五 20时执行一次 (UTC时间)
+   - cron: 0 20 * * 2
+   #     分,时,日,月,周。每周三 20时执行一次 (UTC时间)
   
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
@@ -26,13 +26,13 @@ env:
   ENV_SH: scripts/environment.sh
   REPO_URL: https://github.com/coolsnowwolf/lede
   REPO_BRANCH: master
-  PLATFORM_FILE: configs/Target-X86.txt
+  PLATFORM_FILE: configs/Target-rockchip-L.txt
   CONFIG_FILE: configs/Packages.txt
   CONFIG_5G: configs/Packages-5G.txt
   SETTINGS_SH: scripts/init-settings.sh
   PACKAGES_SH: scripts/packages.sh
   INSTALL5G_SH: scripts/install-5G.sh
-  CLASH_CORE_SH: scripts/preset-clash-core-amd64.sh
+  CLASH_CORE_SH: scripts/preset-clash-core-arm64-L.sh
   VLMCSD_SH: scripts/vlmcsd.sh
   UPLOAD_BIN_DIR: false
   UPLOAD_FIRMWARE: false
@@ -81,8 +81,8 @@ jobs:
       id: check-cache
       uses: actions/cache@main
       with:
-        key: x86-${{env.REPO_BRANCH}}-${{env.WRT_HASH}}
-        restore-keys: x86-${{env.REPO_BRANCH}}
+        key: rockchip-${{env.REPO_BRANCH}}-${{env.WRT_HASH}}
+        restore-keys: rockchip-${{env.REPO_BRANCH}}
         path: |
           ./openwrt/.ccache
           ./openwrt/staging_dir/host*
@@ -108,7 +108,7 @@ jobs:
         fi
 
         if ${{steps.check-cache.outputs.cache-hit != 'true'}}; then
-          CACHE_LIST=$(gh cache list --key "x86-$REPO_BRANCH" | cut -f 1)
+          CACHE_LIST=$(gh cache list --key "rockchip-$REPO_BRANCH" | cut -f 1)
           for CACHE_KEY in $CACHE_LIST; do
             gh cache delete $CACHE_KEY
           done
@@ -130,6 +130,7 @@ jobs:
         [ -f $CONFIG_5G ] && cat $CONFIG_5G >> openwrt/.config
         chmod +x $VLMCSD_SH && $VLMCSD_SH
         cd openwrt
+        rm target/linux/rockchip/patches-*/991-arm64-dts-rockchip-add-more-cpu-operating-points-for.patch || true
         chmod +x $GITHUB_WORKSPACE/$SETTINGS_SH && $GITHUB_WORKSPACE/$SETTINGS_SH
         chmod +x $GITHUB_WORKSPACE/$PACKAGES_SH && $GITHUB_WORKSPACE/$PACKAGES_SH
         chmod +x $GITHUB_WORKSPACE/$INSTALL5G_SH && $GITHUB_WORKSPACE/$INSTALL5G_SH
@@ -142,6 +143,76 @@ jobs:
         make download -j8 V=10
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
+
+    - name: 空间使用情况（编译前）
+      if: (!cancelled())
+      run: df -hT
+
+    - name: 编译固件
+      id: compile
+      run: |
+        cd openwrt
+        make defconfig
+        echo -e "$(nproc) thread compile"
+        make -j$(($(nproc)+1)) || make -j1 V=s
+        echo "status=success" >> $GITHUB_OUTPUT
+
+    - name: 空间使用情况（编译占用）
+      if: (!cancelled())
+      run: df -hT
+
+    - name: 上传 bin 目录
+      uses: actions/upload-artifact@main
+      if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
+      with:
+        name: OpenWrt_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
+        path: openwrt/bin
+
+    - name: 整理文件
+      id: organize
+      if: steps.compile.outputs.status == 'success' && !cancelled()
+      run: |
+        cd openwrt/bin/targets/*/*
+        rm -rf *.bin
+        rm -rf *.buildinfo 
+        rm -rf *.json 
+        rm -rf *.manifest 
+        rm -rf packages
+        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
+        echo "status=success" >> $GITHUB_OUTPUT
+
+    - name: 固件重命名
+      if: steps.organize.outputs.status == 'success' && !cancelled()
+      shell: bash
+      run: |
+        cd openwrt/bin/targets/*/*
+        for file in *rockchip-armv8-*.gz; do
+          new_name=$(echo "$file" | sed 's/rockchip-armv8-//')
+          mv -v "$file" "$new_name"
+        done
+
+    - name: 上传固件目录
+      uses: actions/upload-artifact@main
+      if: env.UPLOAD_FIRMWARE == 'true' && steps.organize.outputs.status == 'success' && !cancelled()
+      with:
+        name: OpenWrt_firmware${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
+        path: ${{ env.FIRMWARE }}
+
+    - name: 生成发布标签
+      id: tag
+      if: steps.compile.outputs.status == 'success' && !cancelled()
+      run: |
+        echo -e "🎉 rockchip平台\n✅ 主线源码\n🍃 如出现不稳定可尝试cpu降频\n❗️ ip地址 : 192.168.8.1" >> release.txt
+        echo "release_tag=$(date +"%Y.%m.%d_Rockchip")" >> $GITHUB_OUTPUT
+        echo "status=success" >> $GITHUB_OUTPUT
+
+    - name: 上传固件到发布
+      uses: softprops/action-gh-release@master
+      if: steps.tag.outputs.status == 'success' && !cancelled()
+      with:
+        tag_name: ${{ steps.tag.outputs.release_tag }}
+        body_path: release.txt
+        files: ${{ env.FIRMWARE }}/*
 
     - name: 空间使用情况（编译前）
       if: (!cancelled())
