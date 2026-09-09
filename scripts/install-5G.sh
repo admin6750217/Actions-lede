@@ -1,5 +1,52 @@
 #!/bin/bash
 
+
+# =========================================================
+# H68K 开机强制开启 WiFi
+# =========================================================
+
+WIFI_INIT_DIR="$GITHUB_WORKSPACE/openwrt/files/etc/init.d"
+WIFI_RC_DIR="$GITHUB_WORKSPACE/openwrt/files/etc/rc.d"
+
+mkdir -p "$WIFI_INIT_DIR" "$WIFI_RC_DIR"
+
+cat > "$WIFI_INIT_DIR/force-wifi" <<'EOF'
+#!/bin/sh /etc/rc.common
+
+START=99
+USE_PROCD=0
+
+start() {
+    logger -t force-wifi "Force enabling WiFi..."
+
+    sleep 5
+
+    wifi config >/dev/null 2>&1 || true
+
+    for radio in $(uci show wireless 2>/dev/null | \
+        sed -n 's/^wireless\.\([^=]*\)=wifi-device$/\1/p'); do
+        uci -q set wireless.$radio.disabled='0'
+    done
+
+    uci -q commit wireless
+    wifi up >/dev/null 2>&1 || true
+
+    logger -t force-wifi "WiFi enabled."
+}
+
+stop() {
+    return 0
+}
+EOF
+
+chmod +x "$WIFI_INIT_DIR/force-wifi"
+
+ln -sf ../init.d/force-wifi "$WIFI_RC_DIR/S99force-wifi"
+
+
+
+
+
 echo "======================================="
 echo "[*] 开始安装 5G 模块支持..."
 echo "======================================="
