@@ -8,7 +8,7 @@
 # Description: Build OpenWrt using GitHub Actions
 #
 
-name: openwrt
+name: rockchip
 
 permissions: write-all
 #开启写权限，防止无法上传到release
@@ -204,66 +204,6 @@ jobs:
       run: |
         echo -e "🎉 rockchip平台\n✅ 主线源码\n🍃 如出现不稳定可尝试cpu降频\n❗️ ip地址 : 192.168.8.1" >> release.txt
         echo "release_tag=$(date +"%Y.%m.%d_Rockchip")" >> $GITHUB_OUTPUT
-        echo "status=success" >> $GITHUB_OUTPUT
-
-    - name: 上传固件到发布
-      uses: softprops/action-gh-release@master
-      if: steps.tag.outputs.status == 'success' && !cancelled()
-      with:
-        tag_name: ${{ steps.tag.outputs.release_tag }}
-        body_path: release.txt
-        files: ${{ env.FIRMWARE }}/*
-
-    - name: 空间使用情况（编译前）
-      if: (!cancelled())
-      run: df -hT
-
-    - name: 编译固件
-      id: compile
-      run: |
-        cd openwrt
-        make defconfig
-        echo -e "$(nproc) thread compile"
-        make -j$(($(nproc)+1)) || make -j1 V=s
-        echo "status=success" >> $GITHUB_OUTPUT
-
-    - name: 空间使用情况（编译占用）
-      if: (!cancelled())
-      run: df -hT
-
-    - name: 上传 bin 目录
-      uses: actions/upload-artifact@main
-      if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
-      with:
-        name: OpenWrt_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
-        path: openwrt/bin
-
-    - name: 整理文件
-      id: organize
-      if: steps.compile.outputs.status == 'success' && !cancelled()
-      run: |
-        cd openwrt/bin/targets/*/*
-        rm -rf *.bin
-        rm -rf *.buildinfo 
-        rm -rf *.json 
-        rm -rf *.manifest 
-        rm -rf packages
-        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
-        echo "status=success" >> $GITHUB_OUTPUT
-
-    - name: 上传固件目录
-      uses: actions/upload-artifact@main
-      if: env.UPLOAD_FIRMWARE == 'true' && steps.organize.outputs.status == 'success' && !cancelled()
-      with:
-        name: OpenWrt_firmware${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
-        path: ${{ env.FIRMWARE }}
-
-    - name: 生成发布标签
-      id: tag
-      if: steps.compile.outputs.status == 'success' && !cancelled()
-      run: |
-        echo -e "🎉 X86-64平台\n✅ 主线源码\n❗️ ip地址 : 192.168.8.1" >> release.txt
-        echo "release_tag=$(date +"%Y.%m.%d_X86-64")" >> $GITHUB_OUTPUT
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 上传固件到发布
